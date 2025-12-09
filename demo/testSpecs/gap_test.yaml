@@ -1,0 +1,6 @@
+entities:
+  User:
+    fields:
+      id: string
+      name: string
+      email: string

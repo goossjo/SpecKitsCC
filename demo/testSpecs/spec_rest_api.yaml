@@ -1,0 +1,33 @@
+# Example REST API specification
+openapi: 3.0.0
+info:
+  title: Book API
+  version: 1.0
+paths:
+  /books:
+    get:
+      summary: List all books
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create a new book
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '201':
+          description: Created
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string

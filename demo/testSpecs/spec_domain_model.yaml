@@ -1,0 +1,15 @@
+entities:
+  Task:
+    fields:
+      id: string
+      title: string
+      completed: boolean
+
+test_cases:
+  - name: CreateTask
+    steps:
+      - call: createTask
+        with:
+          title: "New Task"
+        expect:
+          completed: false
