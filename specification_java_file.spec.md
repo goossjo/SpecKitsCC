@@ -17,8 +17,6 @@ Its responsibilities include:
 
 This agent serves as a **spec-to-code bridge**, enabling teams to implement fully functional applications directly from formal specifications while ensuring consistency, maintainability, and adherence to architectural and coding standards.
 
-
-## 2. Inputs
 ## 2. Inputs
 
 The SpecToCodeAgent requires the following inputs to generate code, domain models, and tests from specifications.
@@ -395,4 +393,3 @@ test_cases:
 - README.md with project overview, entity description, and test instructions
 - GAP report if any fields or constraints are missing
 ---
-
