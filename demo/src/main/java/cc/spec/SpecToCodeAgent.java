@@ -3,7 +3,6 @@ package cc.spec;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -210,8 +209,8 @@ public class SpecToCodeAgent {
         if (!incomingSpecPath.isEmpty()) {
             try {
                 Map<String, Path> files = new HashMap<>();
-                files.put("openapi", Paths.get(incomingSpecPath));
-                Path outputDir = Paths.get("generated-project");
+                files.put("openapi", Path.of(incomingSpecPath));
+                Path outputDir = Path.of("generated-project");
                 GenerationResult result = agent.generateProject(files, outputDir);
                 System.out.println("Project generated successfully at: " + result.getOutputDirectory());
             } catch (Exception e) {
