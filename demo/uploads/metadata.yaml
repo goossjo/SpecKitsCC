@@ -1,0 +1,10 @@
+# Optional additional metadata
+modules:
+  - core
+  - api
+  - service
+dependencies:
+  - lombok
+  - mapstruct
+  - spring-boot-starter-test
+notes: "Used for testing SpecToCodeAgent end-to-end"

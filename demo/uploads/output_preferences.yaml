@@ -1,0 +1,11 @@
+# Preferences for generated project
+folders:
+  base_package: com.example.sample
+  dto: dto
+  entities: entity
+  repositories: repository
+  services: service
+  controllers: controller
+  tests: test
+incremental_generation: false
+include_ci_cd: false

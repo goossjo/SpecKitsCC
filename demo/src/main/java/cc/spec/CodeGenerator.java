@@ -127,7 +127,7 @@ public class CodeGenerator {
     public void generateRepository(SpecParser.EntityInfo entityInfo) throws IOException {
         String className = entityInfo.getName() + "Repository";
         String entityName = entityInfo.getName();
-        String code = String.format("""
+        String code = """
 package %s.repository;
 
 import %s.entity.%s;
@@ -138,7 +138,7 @@ import org.springframework.stereotype.Repository;
 public interface %s extends JpaRepository<%s, Long> {
     // Add custom query methods here if needed
 }
-""", packageName, packageName, entityName, className, entityName);
+""".formatted(packageName, packageName, entityName, className, entityName);
         
         writeFile("src/main/java/" + packageName.replace(".", "/") + "/repository/" + className + ".java", code);
     }
@@ -150,7 +150,7 @@ public interface %s extends JpaRepository<%s, Long> {
         String className = entityInfo.getName() + "Service";
         String entityName = entityInfo.getName();
         String dtoName = entityName + "DTO";
-        String code = String.format("""
+        String code = """
 package %s.service;
 
 import %s.dto.%s;
@@ -163,7 +163,7 @@ public interface %s {
     %s save(%s dto);
     void deleteById(Long id);
 }
-""", packageName, packageName, dtoName, className, dtoName, dtoName, dtoName, dtoName);
+""".formatted(packageName, packageName, dtoName, className, dtoName, dtoName, dtoName, dtoName);
         
         writeFile("src/main/java/" + packageName.replace(".", "/") + "/service/" + className + ".java", code);
     }
@@ -329,7 +329,7 @@ public interface %s {
         String dtoName = entityName + "DTO";
         String serviceName = entityName + "Service";
         
-        String code = String.format("""
+        String code = """
 package %s.controller;
 
 import %s.dto.%s;
@@ -369,7 +369,7 @@ public class %s {
         // TODO: Implement test logic
     }
 }
-""", packageName, packageName, dtoName, packageName, serviceName, entityName, className, serviceName, entityName, entityName, entityName);
+""".formatted(packageName, packageName, dtoName, packageName, serviceName, entityName, className, serviceName, entityName, entityName, entityName);
         
         writeFile("src/test/java/" + packageName.replace(".", "/") + "/controller/" + className + ".java", code);
     }

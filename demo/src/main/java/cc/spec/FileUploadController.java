@@ -11,7 +11,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +38,7 @@ public class FileUploadController {
                                    Model model) {
         StringBuilder result = new StringBuilder();
         StringBuilder logs = new StringBuilder();
-        Path uploadPath = Paths.get(UPLOAD_DIR);
+        Path uploadPath = Path.of(UPLOAD_DIR);
         Map<String, Path> uploadedFiles = new HashMap<>();
         
         try {
@@ -79,7 +78,7 @@ public class FileUploadController {
                 
                 // Create output directory with timestamp
                 String timestamp = String.valueOf(System.currentTimeMillis());
-                Path outputDir = Paths.get(GENERATED_DIR, "project-" + timestamp);
+                Path outputDir = Path.of(GENERATED_DIR, "project-" + timestamp);
                 Files.createDirectories(outputDir);
                 
                 logs.append("[INFO] Generating project structure...\n");

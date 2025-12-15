@@ -41,7 +41,7 @@ public class ProjectGenerator {
      * Generates pom.xml for the project
      */
     public void generatePomXml() throws IOException {
-        String pomContent = String.format(""" 
+        String pomContent = """ 
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -97,7 +97,7 @@ public class ProjectGenerator {
         </plugins>
     </build>
 </project>
-""", packageName, projectName.toLowerCase(), projectName);
+""".formatted(packageName, projectName.toLowerCase(), projectName);
         
         writeFile("pom.xml", pomContent);
     }
@@ -133,7 +133,7 @@ server.port=8080
      */
     public void generateApplicationClass() throws IOException {
         String className = projectName + "Application";
-        String content = String.format("""
+        String content = """
 package %s;
 
 import org.springframework.boot.SpringApplication;
@@ -145,7 +145,7 @@ public class %s {
         SpringApplication.run(%s.class, args);
     }
 }
-""", packageName, className, className);
+""".formatted(packageName, className, className);
         
         writeFile("src/main/java/" + packageName.replace(".", "/") + "/" + className + ".java", content);
     }
