@@ -6,7 +6,7 @@
 
   <groupId>cc.spec</groupId>
   <artifactId>demo</artifactId>
-  <version>mvn archetype:generate -DgroupId=com.example -DartifactId=SpecKitsNewProject -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false</version>
+  <version>1.0.0</version>
 
   <name>demo</name>
   <!-- FIXME change it to the project's website -->
