@@ -17,13 +17,12 @@
 10. **Generics:** Always use explicit type arguments for collections and generics (no raw types).
 11. **Logging:** Use SLF4J for logging.
 12. **Magic Numbers:** Avoid magic numbers; use named constants instead.
-13. **Test Naming:** Test method names must use the pattern `given...should...`.
-14. **Dependency Injection:** Use constructor injection for all services and repositories.
-15. **Reflection/Proxies:** No restrictions on reflection or dynamic proxies.
-16. **DTOs:** All API responses must use DTOs, but do not add 'DTO' to the class name.
-17. **Null Handling:** Use `Optional` for handling null values.
-18. **Builder Pattern:** Use builder pattern for DTOs.
-19. **Method Length/Complexity:** No restrictions on method length or cyclomatic complexity.
+13. **Dependency Injection:** Use constructor injection for all services and repositories.
+14. **Reflection/Proxies:** No restrictions on reflection or dynamic proxies.
+15. **DTOs:** All API responses must use DTOs, but do not add 'DTO' to the class name.
+16. **Null Handling:** Use `Optional` for handling null values.
+17. **Builder Pattern:** Use builder pattern for DTOs.
+18. **Method Length/Complexity:** No restrictions on method length or cyclomatic complexity.
 
 ### Rule: Naming Conventions
 
@@ -54,7 +53,7 @@
 ## Test Writing Rules
 
 1. **Rule Coverage:** Each test must validate a specific rule from the coding specification above.
-2. **Naming:** Test names must clearly indicate the rule being tested (e.g., `testInterfaceNamingConvention`).
+2. **Test Naming:** Test method names must use the pattern `given...should...`.
 3. **Positive & Negative Cases:** For each rule, provide at least one passing (compliant) and one failing (non-compliant) example.
 4. **Isolation:** Each test should focus on a single rule to avoid ambiguity.
 5. **Clarity:** Use clear and concise code snippets in tests to illustrate compliance or violation.
