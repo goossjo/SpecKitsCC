@@ -30,8 +30,6 @@ public class FileUploadController {
                                    @RequestParam(required = false) MultipartFile graphql,
                                    @RequestParam(required = false) MultipartFile domain,
                                    @RequestParam(required = false) MultipartFile testspec,
-                                   @RequestParam(required = false) MultipartFile style,
-                                   @RequestParam(required = false) MultipartFile metadata,
                                    @RequestParam(required = false) MultipartFile dependencies,
                                    @RequestParam(required = false) MultipartFile outputprefs,
                                    @RequestParam(required = false) String generationMode,
@@ -47,30 +45,51 @@ public class FileUploadController {
                 Files.createDirectories(uploadPath);
             }
             
-            // Upload files and track their paths
-            MultipartFile[] files = {openapi, graphql, domain, testspec, style, metadata, dependencies, outputprefs};
-            String[] keys = {"openapi", "graphql", "domain", "testspec", "style", "metadata", "dependencies", "outputprefs"};
-            String[] names = {"OpenAPI", "GraphQL", "Domain Model", "Test Spec", "Style", "Metadata", "Dependencies", "Output Prefs"};
+            // Upload required files and track their paths
+            MultipartFile[] requiredFiles = {openapi, graphql, domain, outputprefs};
+            String[] requiredKeys = {"openapi", "graphql", "domain", "outputprefs"};
+            String[] requiredNames = {"OpenAPI", "GraphQL", "Domain Model", "Output Preferences"};
             
-            for (int i = 0; i < files.length; i++) {
-                MultipartFile file = files[i];
+            // Upload optional files
+            MultipartFile[] optionalFiles = {testspec, dependencies};
+            String[] optionalKeys = {"testspec", "dependencies"};
+            String[] optionalNames = {"Test Spec", "Dependencies"};
+            
+            // Process required files
+            for (int i = 0; i < requiredFiles.length; i++) {
+                MultipartFile file = requiredFiles[i];
                 if (file != null && !file.isEmpty()) {
                     Path filePath = uploadPath.resolve(file.getOriginalFilename());
                     file.transferTo(filePath.toFile());
-                    uploadedFiles.put(keys[i], filePath);
+                    uploadedFiles.put(requiredKeys[i], filePath);
                     result.append("Uploaded: ").append(file.getOriginalFilename()).append("<br>");
-                    logs.append("[INFO] Uploaded ").append(names[i]).append(": ").append(file.getOriginalFilename()).append("\n");
+                    logs.append("[INFO] Uploaded ").append(requiredNames[i]).append(": ").append(file.getOriginalFilename()).append("\n");
                 } else {
-                    logs.append("[WARN] No file uploaded for ").append(names[i]).append("\n");
+                    logs.append("[WARN] No file uploaded for ").append(requiredNames[i]).append("\n");
                 }
             }
             
-            // Check if we have at least one spec file to generate from
-            boolean hasSpecFile = uploadedFiles.containsKey("openapi") || 
-                                 uploadedFiles.containsKey("graphql") || 
-                                 uploadedFiles.containsKey("domain");
+            // Process optional files
+            for (int i = 0; i < optionalFiles.length; i++) {
+                MultipartFile file = optionalFiles[i];
+                if (file != null && !file.isEmpty()) {
+                    Path filePath = uploadPath.resolve(file.getOriginalFilename());
+                    file.transferTo(filePath.toFile());
+                    uploadedFiles.put(optionalKeys[i], filePath);
+                    result.append("Uploaded: ").append(file.getOriginalFilename()).append("<br>");
+                    logs.append("[INFO] Uploaded ").append(optionalNames[i]).append(": ").append(file.getOriginalFilename()).append("\n");
+                } else {
+                    logs.append("[INFO] Optional file ").append(optionalNames[i]).append(" not provided (optional)\n");
+                }
+            }
             
-            if (hasSpecFile) {
+            // Validate required files are present
+            boolean hasAllRequired = uploadedFiles.containsKey("openapi") && 
+                                    uploadedFiles.containsKey("graphql") && 
+                                    uploadedFiles.containsKey("domain") &&
+                                    uploadedFiles.containsKey("outputprefs");
+            
+            if (hasAllRequired) {
                 logs.append("[INFO] Starting project generation...\n");
                 logs.append("[INFO] Parsing specifications...\n");
                 // Create output directory with timestamp and mode
@@ -118,8 +137,19 @@ public class FileUploadController {
                     result.append("Location: ").append(outputDir.toAbsolutePath()).append("<br>");
                 }
             } else {
-                logs.append("[WARN] No specification files provided. Upload OpenAPI, GraphQL, or Domain Model files to generate a project.\n");
-                result.append("<br><strong>No specification files uploaded.</strong> Please upload at least one spec file (OpenAPI, GraphQL, or Domain Model) to generate a project.");
+                StringBuilder missingFiles = new StringBuilder();
+                if (!uploadedFiles.containsKey("openapi")) missingFiles.append("OpenAPI, ");
+                if (!uploadedFiles.containsKey("graphql")) missingFiles.append("GraphQL, ");
+                if (!uploadedFiles.containsKey("domain")) missingFiles.append("Domain Model, ");
+                if (!uploadedFiles.containsKey("outputprefs")) missingFiles.append("Output Preferences, ");
+                
+                if (missingFiles.length() > 0) {
+                    missingFiles.setLength(missingFiles.length() - 2); // Remove trailing ", "
+                }
+                
+                logs.append("[ERROR] Missing required specification files: ").append(missingFiles.toString()).append("\n");
+                result.append("<br><strong>Missing required files:</strong> ").append(missingFiles.toString()).append("<br>");
+                result.append("Please upload all required files: OpenAPI, GraphQL, Domain Model, and Output Preferences.");
             }
             
             model.addAttribute("message", result.length() > 0 ? result.toString() : "No files uploaded.");

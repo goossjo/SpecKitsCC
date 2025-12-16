@@ -115,61 +115,50 @@
                 <form method="post" enctype="multipart/form-data" action="/upload" autocomplete="off">
                     <input type="hidden" name="generationMode" id="generationMode" value="codegen" />
                     <fieldset class="border rounded-3 p-3 mb-3">
-                    <legend class="float-none w-auto px-2 fs-6">Specification Files</legend>
+                    <legend class="float-none w-auto px-2 fs-6">Required Specification Files</legend>
             <div class="row g-2 mb-2">
                 <div class="col-12 col-md-6">
                     <label for="openapi" class="form-label">OpenAPI / Swagger (.yaml, .json):
-                        <span class="text-muted" data-bs-toggle="tooltip" title="REST API specification file">(optional)</span>
+                        <span class="text-danger" data-bs-toggle="tooltip" title="REST API specification file">*required</span>
                     </label>
-                    <input type="file" class="form-control" name="openapi" id="openapi" />
+                    <input type="file" class="form-control" name="openapi" id="openapi" required />
                 </div>
                 <div class="col-12 col-md-6">
                     <label for="graphql" class="form-label">GraphQL schema (.graphql, .gql):
-                        <span class="text-muted" data-bs-toggle="tooltip" title="GraphQL API schema file">(optional)</span>
+                        <span class="text-danger" data-bs-toggle="tooltip" title="GraphQL API schema file">*required</span>
                     </label>
-                    <input type="file" class="form-control" name="graphql" id="graphql" />
+                    <input type="file" class="form-control" name="graphql" id="graphql" required />
                 </div>
             </div>
             <div class="row g-2 mb-2">
                 <div class="col-12 col-md-6">
                     <label for="domain" class="form-label">Domain model (YAML, JSON, or table):
-                        <span class="text-muted" data-bs-toggle="tooltip" title="Domain model specification">(optional)</span>
+                        <span class="text-danger" data-bs-toggle="tooltip" title="Domain model specification">*required</span>
                     </label>
-                    <input type="file" class="form-control" name="domain" id="domain" />
+                    <input type="file" class="form-control" name="domain" id="domain" required />
                 </div>
+                <div class="col-12 col-md-6">
+                    <label for="outputprefs" class="form-label">Output preferences:
+                        <span class="text-danger" data-bs-toggle="tooltip" title="Custom folder structure, package naming, etc.">*required</span>
+                    </label>
+                    <input type="file" class="form-control" name="outputprefs" id="outputprefs" required />
+                </div>
+            </div>
+            </fieldset>
+            <fieldset class="border rounded-3 p-3 mb-3">
+                    <legend class="float-none w-auto px-2 fs-6">Optional Files</legend>
+            <div class="row g-2 mb-2">
                 <div class="col-12 col-md-6">
                     <label for="testspec" class="form-label">Test specification:
                         <span class="text-muted" data-bs-toggle="tooltip" title="Test scenarios or expected outcomes">(optional)</span>
                     </label>
                     <input type="file" class="form-control" name="testspec" id="testspec" />
                 </div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-12 col-md-6">
-                    <label for="style" class="form-label">Styling rules / formatting conventions:
-                        <span class="text-muted" data-bs-toggle="tooltip" title="Code style and formatting">(optional)</span>
-                    </label>
-                    <input type="file" class="form-control" name="style" id="style" />
-                </div>
-                <div class="col-12 col-md-6">
-                    <label for="metadata" class="form-label">Additional metadata:
-                        <span class="text-muted" data-bs-toggle="tooltip" title="Project name, author, version, etc.">(optional)</span>
-                    </label>
-                    <input type="file" class="form-control" name="metadata" id="metadata" />
-                </div>
-            </div>
-            <div class="row g-2 mb-2">
                 <div class="col-12 col-md-6">
                     <label for="dependencies" class="form-label">External dependencies / plugins:
                         <span class="text-muted" data-bs-toggle="tooltip" title="Extra libraries or plugins">(optional)</span>
                     </label>
                     <input type="file" class="form-control" name="dependencies" id="dependencies" />
-                </div>
-                <div class="col-12 col-md-6">
-                    <label for="outputprefs" class="form-label">Output preferences:
-                        <span class="text-muted" data-bs-toggle="tooltip" title="Custom folder structure, package naming, etc.">(optional)</span>
-                    </label>
-                    <input type="file" class="form-control" name="outputprefs" id="outputprefs" />
                 </div>
             </div>
             </fieldset>
