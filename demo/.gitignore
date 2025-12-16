@@ -28,9 +28,9 @@ Thumbs.db
 # Uploads and generated files
 /uploads/
 
-# Test output
+# Test output 
 /test-classes/
-
+ 
 # Misc
 *.swp
 *~

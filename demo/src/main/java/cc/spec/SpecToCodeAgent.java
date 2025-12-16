@@ -1,4 +1,4 @@
-package cc.spec.ai;
+package cc.spec;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -6,13 +6,20 @@ import java.nio.file.Path;
 import java.util.*;
 
 import cc.spec.GapReportGenerator;
+import cc.spec.SpecParser;
 import cc.spec.SpecParser.EndpointInfo;
 import cc.spec.SpecParser.EntityInfo;
-import cc.spec.classic.CodeGenerator;
-import cc.spec.classic.ProjectGenerator;
+import cc.spec.CodeGenerator;
 
+/**
+ * SpecToCodeAgent
+ *
+ * This agent reads formal specification files (OpenAPI, GraphQL, domain models, etc.) 
+ * and generates code artifacts according to the specification.
+ *
+ * Specification context: see specification_java_file.spec.md for full details.
+ */
 public class SpecToCodeAgent {
-    private final boolean useAI = true;
     private final String referenceSpecFilePath;
     private final SpecParser specParser;
     private final GapReportGenerator gapReportGenerator;
@@ -29,8 +36,11 @@ public class SpecToCodeAgent {
 
     /**
      * Main method to generate a complete project from uploaded specification files
+     * @param uploadedFiles Map of file types to their paths
+     * @param outputDirectory Where to generate the project
+     * @param useAI Whether to use AI-powered code generation
      */
-    public GenerationResult generateProject(Map<String, Path> uploadedFiles, Path outputDirectory, boolean aiMode) throws IOException {
+    public GenerationResult generateProject(Map<String, Path> uploadedFiles, Path outputDirectory, boolean useAI) throws IOException {
         // Parse uploaded files
         Map<String, Object> openAPISpec = null;
         String graphQLSchema = null;
@@ -38,44 +48,74 @@ public class SpecToCodeAgent {
         Map<String, Object> metadata = null;
         Map<String, Object> outputPreferences = null;
 
-        if (aiMode) {
-            // Only use the AI agent for generation
+        // If AI is enabled and any spec file is present, call OpenAIClient for code generation
+        if (useAI) {
             try {
                 OpenAIClient openAIClient = new OpenAIClient();
                 StringBuilder promptBuilder = new StringBuilder();
                 promptBuilder.append("Generate a Java Spring Boot project using the following specification files. Provide only the main code files as a JSON object with file paths as keys and file contents as values.\n");
+                promptBuilder.append("Include all necessary Spring Boot components: entities, DTOs, repositories, services, controllers, and tests.\n\n");
+                
+                System.out.println("[AI] Preparing to send spec files to OpenAI agent...");
+                int fileCount = 0;
                 for (Map.Entry<String, Path> entry : uploadedFiles.entrySet()) {
                     String key = entry.getKey();
                     Path path = entry.getValue();
                     if (path != null && Files.exists(path)) {
-                        String content = Files.readString(path);
-                        promptBuilder.append("\n--- " + key + " file ---\n");
-                        promptBuilder.append(content).append("\n");
+                        try {
+                            String content = Files.readString(path);
+                            promptBuilder.append("\n--- ").append(key.toUpperCase()).append(" SPECIFICATION FILE ---\n");
+                            promptBuilder.append("File type: ").append(key).append("\n");
+                            promptBuilder.append("File name: ").append(path.getFileName()).append("\n");
+                            promptBuilder.append("Content:\n").append(content).append("\n");
+                            promptBuilder.append("--- END ").append(key.toUpperCase()).append(" FILE ---\n");
+                            fileCount++;
+                            System.out.println("[AI] ✓ Added " + key + " file: " + path.getFileName() + " (" + content.length() + " chars)");
+                        } catch (Exception e) {
+                            System.err.println("[AI] ✗ Failed to read " + key + " file: " + e.getMessage());
+                            gapReportGenerator.addGap("Failed to read " + key + " file for AI: " + e.getMessage());
+                        }
                     }
                 }
+                
+                if (fileCount == 0) {
+                    throw new IOException("No spec files were successfully read to send to OpenAI");
+                }
+                
+                System.out.println("[AI] Sending " + fileCount + " spec file(s) to OpenAI API...");
                 String prompt = promptBuilder.toString();
+                System.out.println("[AI] Total prompt size: " + prompt.length() + " characters");
                 String aiResponse = openAIClient.chatCompletion(prompt);
+                System.out.println("[AI] ✓ Received response from OpenAI (" + aiResponse.length() + " chars)");
                 // Parse the AI response as JSON and write files
                 Files.createDirectories(outputDirectory);
                 Path aiOut = outputDirectory.resolve("openai_response.json");
                 Files.writeString(aiOut, aiResponse);
+                System.out.println("[AI] ✓ Saved OpenAI response to: " + aiOut);
+                
                 // Try to parse as JSON and write files
                 try {
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                     Map<String, String> fileMap = mapper.readValue(aiResponse, Map.class);
+                    System.out.println("[AI] ✓ Parsed response as JSON, found " + fileMap.size() + " files to generate");
+                    int generatedCount = 0;
                     for (Map.Entry<String, String> fileEntry : fileMap.entrySet()) {
                         Path filePath = outputDirectory.resolve(fileEntry.getKey());
                         Files.createDirectories(filePath.getParent());
                         Files.writeString(filePath, fileEntry.getValue());
+                        generatedCount++;
+                        System.out.println("[AI] ✓ Generated: " + fileEntry.getKey());
                     }
+                    System.out.println("[AI] ✓ Successfully generated " + generatedCount + " files from AI response");
                 } catch (Exception jsonEx) {
+                    System.err.println("[AI] ✗ Failed to parse OpenAI response as JSON: " + jsonEx.getMessage());
                     gapReportGenerator.addGap("Failed to parse OpenAI response as JSON: " + jsonEx.getMessage());
                 }
             } catch (Exception e) {
+                System.err.println("[AI] ✗ OpenAI API call failed: " + e.getMessage());
+                e.printStackTrace();
                 gapReportGenerator.addGap("OpenAI API call failed: " + e.getMessage());
             }
-            // Return minimal result for AI mode
-            return new GenerationResult(outputDirectory, Collections.emptyList(), gapReportGenerator.getGaps());
         }
 
         boolean hasOpenAPI = uploadedFiles.containsKey("openapi") && uploadedFiles.get("openapi") != null;

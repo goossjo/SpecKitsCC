@@ -13,8 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import cc.spec.ai.SpecToCodeAgent;
-import cc.spec.classic.CodeGenerator;
 
 @Controller
 public class FileUploadController {
@@ -87,6 +85,7 @@ public class FileUploadController {
                 logs.append("[INFO] Output directory: ").append(outputDir.toString()).append("\n");
                 if (generationMode != null && generationMode.equals("ai")) {
                     logs.append("[INFO] Using AI Agent for code generation.\n");
+                    logs.append("[INFO] Sending spec files to OpenAI API...\n");
                     // Only use the AI agent for generation
                     SpecToCodeAgent agent = new SpecToCodeAgent(REFERENCE_SPEC_PATH);
                     SpecToCodeAgent.GenerationResult generationResult = agent.generateProject(uploadedFiles, outputDir, true);
