@@ -1,4 +1,4 @@
-package cc.spec;
+package cc.spec.classic;
 
 import java.io.IOException;
 import java.nio.file.Files;

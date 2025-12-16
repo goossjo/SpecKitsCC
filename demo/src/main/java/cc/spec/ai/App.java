@@ -1,5 +1,3 @@
-package cc.spec;
-
 /**
  * Hello world!
  *

@@ -1,4 +1,8 @@
-package cc.spec;
+
+package cc.spec.ai;
+
+import java.util.List;
+import java.util.ArrayList;
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,10 +46,17 @@ public class OpenAIClient {
      * @return The response from OpenAI
      */
     public String chatCompletion(String prompt) throws IOException, InterruptedException {
-        String requestBody = "{" +
-                "\"model\": \"gpt-3.5-turbo\"," +
-                "\"messages\": [{\"role\": \"user\", \"content\": " + quoteJson(prompt) + "}]" +
-                "}";
+        // Use Jackson to build the JSON body
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", "gpt-3.5-turbo");
+        List<Map<String, String>> messages = new ArrayList<>();
+        Map<String, String> userMsg = new HashMap<>();
+        userMsg.put("role", "user");
+        userMsg.put("content", prompt);
+        messages.add(userMsg);
+        body.put("messages", messages);
+        String requestBody = mapper.writeValueAsString(body);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(OPENAI_URL))
@@ -60,10 +71,5 @@ public class OpenAIClient {
             throw new IOException("OpenAI API error: " + response.statusCode() + "\n" + response.body());
         }
         return response.body();
-    }
-
-    private String quoteJson(String s) {
-        // Simple JSON string escape
-        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
     }
 }

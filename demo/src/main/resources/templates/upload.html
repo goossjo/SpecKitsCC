@@ -1,9 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6DQD1KQ9Q8cbh6wr1Q1ZCk41Z1nOjwWQ1y5n0I4bF5rE" crossorigin="anonymous">
     <meta charset="UTF-8">
     <title>File Upload</title>
     <style>
+        .tab-btn {
+            background: #eaf6ff;
+            color: #1766b3;
+            border: 1px solid #b3d8fd;
+            border-bottom: none;
+            padding: 10px 32px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            margin: 0 2px;
+            outline: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        .tab-btn.active {
+            background: #2d8cf0;
+            color: #fff;
+            border-bottom: 2px solid #fff;
+        }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background: #f7f9fa;
@@ -67,55 +88,125 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Upload Specification Files</h1>
-        <form method="post" enctype="multipart/form-data" action="/upload">
-            <div>
-                <label for="openapi">OpenAPI / Swagger (.yaml, .json):</label><br>
-                <input type="file" name="openapi" id="openapi" />
-                <small>REST API specification file (optional)</small>
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">SpecKits Codegen</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="/">Home</a>
+                        </li>
+                        <!-- Add more nav items here if needed -->
+                    </ul>
+                </div>
             </div>
-            <div>
-                <label for="graphql">GraphQL schema (.graphql, .gql):</label><br>
-                <input type="file" name="graphql" id="graphql" />
-                <small>GraphQL API schema file (optional)</small>
+        </nav>
+        <div class="container">
+                <h1 class="mb-4 text-center">Project Generator</h1>
+                <p class="text-center text-muted mb-4">Upload your specification files to generate a Java Spring Boot project. Choose between classic code generation and AI-powered generation.</p>
+                <div class="d-flex justify-content-center mb-4 gap-2">
+                    <button type="button" id="tab-codegen" class="tab-btn active" onclick="selectTab('codegen')" aria-label="Classic code generator tab">Code Generator</button>
+                    <button type="button" id="tab-ai" class="tab-btn" onclick="selectTab('ai')" aria-label="AI agent code generator tab">AI Agent</button>
+                </div>
+                <form method="post" enctype="multipart/form-data" action="/upload" autocomplete="off">
+                    <input type="hidden" name="generationMode" id="generationMode" value="codegen" />
+                    <fieldset class="border rounded-3 p-3 mb-3">
+                    <legend class="float-none w-auto px-2 fs-6">Specification Files</legend>
+            <div class="mb-3">
+                <label for="folderUpload" class="form-label">Or upload a folder of specs:</label>
+                <input type="file" class="form-control" id="folderUpload" name="folderUpload" webkitdirectory directory multiple />
+                <small class="text-muted">Select a folder to upload all contained files. All files in the folder and subfolders will be included.</small>
             </div>
-            <div>
-                <label for="domain">Domain model (YAML, JSON, or table):</label><br>
-                <input type="file" name="domain" id="domain" />
-                <small>Domain model specification (optional)</small>
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-md-6">
+                    <label for="openapi" class="form-label">OpenAPI / Swagger (.yaml, .json):
+                        <span class="text-muted" data-bs-toggle="tooltip" title="REST API specification file">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="openapi" id="openapi" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="graphql" class="form-label">GraphQL schema (.graphql, .gql):
+                        <span class="text-muted" data-bs-toggle="tooltip" title="GraphQL API schema file">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="graphql" id="graphql" />
+                </div>
             </div>
-            <div>
-                <label for="testspec">Test specification:</label><br>
-                <input type="file" name="testspec" id="testspec" />
-                <small>Test scenarios or expected outcomes (optional)</small>
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-md-6">
+                    <label for="domain" class="form-label">Domain model (YAML, JSON, or table):
+                        <span class="text-muted" data-bs-toggle="tooltip" title="Domain model specification">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="domain" id="domain" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="testspec" class="form-label">Test specification:
+                        <span class="text-muted" data-bs-toggle="tooltip" title="Test scenarios or expected outcomes">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="testspec" id="testspec" />
+                </div>
             </div>
-            <div>
-                <label for="style">Styling rules / formatting conventions:</label><br>
-                <input type="file" name="style" id="style" />
-                <small>Code style and formatting (optional)</small>
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-md-6">
+                    <label for="style" class="form-label">Styling rules / formatting conventions:
+                        <span class="text-muted" data-bs-toggle="tooltip" title="Code style and formatting">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="style" id="style" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="metadata" class="form-label">Additional metadata:
+                        <span class="text-muted" data-bs-toggle="tooltip" title="Project name, author, version, etc.">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="metadata" id="metadata" />
+                </div>
             </div>
-            <div>
-                <label for="metadata">Additional metadata:</label><br>
-                <input type="file" name="metadata" id="metadata" />
-                <small>Project name, author, version, etc. (optional)</small>
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-md-6">
+                    <label for="dependencies" class="form-label">External dependencies / plugins:
+                        <span class="text-muted" data-bs-toggle="tooltip" title="Extra libraries or plugins">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="dependencies" id="dependencies" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="outputprefs" class="form-label">Output preferences:
+                        <span class="text-muted" data-bs-toggle="tooltip" title="Custom folder structure, package naming, etc.">(optional)</span>
+                    </label>
+                    <input type="file" class="form-control" name="outputprefs" id="outputprefs" />
+                </div>
             </div>
-            <div>
-                <label for="dependencies">External dependencies / plugins:</label><br>
-                <input type="file" name="dependencies" id="dependencies" />
-                <small>Extra libraries or plugins (optional)</small>
+            </fieldset>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Generate Project</button>
             </div>
-            <div>
-                <label for="outputprefs">Output preferences:</label><br>
-                <input type="file" name="outputprefs" id="outputprefs" />
-                <small>Custom folder structure, package naming, etc. (optional)</small>
-            </div>
-            <button type="submit">Upload</button>
         </form>
         <div class="message" th:utext="${message}"></div>
-        <div id="log-area" style="margin-top:24px; background:#222; color:#eaf6ff; padding:16px; border-radius:6px; font-family:monospace; font-size:0.98em; min-height:120px; max-height:300px; overflow-y:auto;">
+        <div id="log-area" class="mt-4 p-3 rounded-3" style="background:#222; color:#eaf6ff; font-family:monospace; font-size:0.98em; min-height:120px; max-height:300px; overflow-y:auto;">
             <span th:utext="${logs}"></span>
         </div>
+        <!-- Bootstrap JS (for navbar toggling) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-qQ2iX+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script>
+        function selectTab(tab) {
+            document.getElementById('generationMode').value = tab;
+            document.getElementById('tab-codegen').classList.remove('active');
+            document.getElementById('tab-ai').classList.remove('active');
+            if (tab === 'codegen') {
+                document.getElementById('tab-codegen').classList.add('active');
+            } else {
+                document.getElementById('tab-ai').classList.add('active');
+            }
+        }
+        // Enable Bootstrap tooltips
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        </script>
     </div>
 </body>
 </html>

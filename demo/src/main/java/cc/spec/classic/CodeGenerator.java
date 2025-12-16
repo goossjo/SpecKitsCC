@@ -1,9 +1,12 @@
-package cc.spec;
+package cc.spec.classic;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import cc.spec.SpecParser;
+import cc.spec.SpecParser.EntityInfo;
 
 /**
  * Generates Java code artifacts (entities, DTOs, repositories, services, controllers)

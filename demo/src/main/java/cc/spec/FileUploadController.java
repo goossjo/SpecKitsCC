@@ -13,6 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import cc.spec.ai.SpecToCodeAgent;
+import cc.spec.classic.CodeGenerator;
 
 @Controller
 public class FileUploadController {
@@ -34,6 +36,7 @@ public class FileUploadController {
                                    @RequestParam(required = false) MultipartFile metadata,
                                    @RequestParam(required = false) MultipartFile dependencies,
                                    @RequestParam(required = false) MultipartFile outputprefs,
+                                   @RequestParam(required = false) String generationMode,
                                    RedirectAttributes redirectAttributes,
                                    Model model) {
         StringBuilder result = new StringBuilder();
@@ -72,36 +75,49 @@ public class FileUploadController {
             if (hasSpecFile) {
                 logs.append("[INFO] Starting project generation...\n");
                 logs.append("[INFO] Parsing specifications...\n");
-                
-                // Initialize the agent
-                SpecToCodeAgent agent = new SpecToCodeAgent(REFERENCE_SPEC_PATH);
-                
-                // Create output directory with timestamp
+                // Create output directory with timestamp and mode
                 String timestamp = String.valueOf(System.currentTimeMillis());
-                Path outputDir = Path.of(GENERATED_DIR, "project-" + timestamp);
+                Path outputDir;
+                if (generationMode != null && generationMode.equals("ai")) {
+                    outputDir = Path.of(GENERATED_DIR, "ai", "project-" + timestamp);
+                } else {
+                    outputDir = Path.of(GENERATED_DIR, "classic", "project-" + timestamp);
+                }
                 Files.createDirectories(outputDir);
-                
-                logs.append("[INFO] Generating project structure...\n");
                 logs.append("[INFO] Output directory: ").append(outputDir.toString()).append("\n");
-                
-                // Generate the project
-                SpecToCodeAgent.GenerationResult generationResult = agent.generateProject(uploadedFiles, outputDir);
-                
-                logs.append("[INFO] Generated entities: ").append(generationResult.getGeneratedEntities().size()).append("\n");
-                for (String entity : generationResult.getGeneratedEntities()) {
-                    logs.append("[INFO]   - ").append(entity).append("\n");
+                if (generationMode != null && generationMode.equals("ai")) {
+                    logs.append("[INFO] Using AI Agent for code generation.\n");
+                    // Only use the AI agent for generation
+                    SpecToCodeAgent agent = new SpecToCodeAgent(REFERENCE_SPEC_PATH);
+                    SpecToCodeAgent.GenerationResult generationResult = agent.generateProject(uploadedFiles, outputDir, true);
+                    boolean aiUsed = false;
+                    for (String gap : generationResult.getGaps()) {
+                        if (gap != null && gap.contains("OpenAI API call")) {
+                            aiUsed = true;
+                            break;
+                        }
+                    }
+                    if (Files.exists(outputDir.resolve("openai_response.json"))) {
+                        aiUsed = true;
+                    }
+                    if (aiUsed) {
+                        logs.append("[AI] AI-powered code generation was used. See openai_response.json for details.\n");
+                        result.append("<br><strong>AI-powered code generation was used.</strong><br>");
+                    }
+                    logs.append("[SUCCESS] Project generation complete!\n");
+                    logs.append("[INFO] Project location: ").append(outputDir.toAbsolutePath()).append("\n");
+                    result.append("<br><strong>Project generated successfully!</strong><br>");
+                    result.append("Location: ").append(outputDir.toAbsolutePath()).append("<br>");
+                } else {
+                    logs.append("[INFO] Using classic Code Generator (no AI).\n");
+                    // Only use the classic code generator for generation
+                    SpecToCodeAgent agent = new SpecToCodeAgent(REFERENCE_SPEC_PATH);
+                    SpecToCodeAgent.GenerationResult generationResult = agent.generateProject(uploadedFiles, outputDir, false);
+                    logs.append("[SUCCESS] Project generated using classic code generator!\n");
+                    logs.append("[INFO] Project location: ").append(outputDir.toAbsolutePath()).append("\n");
+                    result.append("<br><strong>Project generated using classic code generator!</strong><br>");
+                    result.append("Location: ").append(outputDir.toAbsolutePath()).append("<br>");
                 }
-                
-                if (!generationResult.getGaps().isEmpty()) {
-                    logs.append("[WARN] Found ").append(generationResult.getGaps().size()).append(" gap(s) - see GAP_REPORT.md\n");
-                }
-                
-                logs.append("[SUCCESS] Project generation complete!\n");
-                logs.append("[INFO] Project location: ").append(outputDir.toAbsolutePath()).append("\n");
-                
-                result.append("<br><strong>Project generated successfully!</strong><br>");
-                result.append("Location: ").append(outputDir.toAbsolutePath()).append("<br>");
-                result.append("Generated ").append(generationResult.getGeneratedEntities().size()).append(" entity(ies)");
             } else {
                 logs.append("[WARN] No specification files provided. Upload OpenAPI, GraphQL, or Domain Model files to generate a project.\n");
                 result.append("<br><strong>No specification files uploaded.</strong> Please upload at least one spec file (OpenAPI, GraphQL, or Domain Model) to generate a project.");

@@ -1,19 +1,18 @@
-package cc.spec;
+package cc.spec.ai;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-/**
- * SpecToCodeAgent
- *
- * This agent reads formal specification files (OpenAPI, GraphQL, domain models, etc.) 
- * and generates code artifacts according to the specification.
- *
- * Specification context: see specification_java_file.spec.md for full details.
- */
+import cc.spec.GapReportGenerator;
+import cc.spec.SpecParser.EndpointInfo;
+import cc.spec.SpecParser.EntityInfo;
+import cc.spec.classic.CodeGenerator;
+import cc.spec.classic.ProjectGenerator;
+
 public class SpecToCodeAgent {
+    private final boolean useAI = true;
     private final String referenceSpecFilePath;
     private final SpecParser specParser;
     private final GapReportGenerator gapReportGenerator;
@@ -31,13 +30,53 @@ public class SpecToCodeAgent {
     /**
      * Main method to generate a complete project from uploaded specification files
      */
-    public GenerationResult generateProject(Map<String, Path> uploadedFiles, Path outputDirectory) throws IOException {
+    public GenerationResult generateProject(Map<String, Path> uploadedFiles, Path outputDirectory, boolean aiMode) throws IOException {
         // Parse uploaded files
         Map<String, Object> openAPISpec = null;
         String graphQLSchema = null;
         Map<String, Object> domainModel = null;
         Map<String, Object> metadata = null;
         Map<String, Object> outputPreferences = null;
+
+        if (aiMode) {
+            // Only use the AI agent for generation
+            try {
+                OpenAIClient openAIClient = new OpenAIClient();
+                StringBuilder promptBuilder = new StringBuilder();
+                promptBuilder.append("Generate a Java Spring Boot project using the following specification files. Provide only the main code files as a JSON object with file paths as keys and file contents as values.\n");
+                for (Map.Entry<String, Path> entry : uploadedFiles.entrySet()) {
+                    String key = entry.getKey();
+                    Path path = entry.getValue();
+                    if (path != null && Files.exists(path)) {
+                        String content = Files.readString(path);
+                        promptBuilder.append("\n--- " + key + " file ---\n");
+                        promptBuilder.append(content).append("\n");
+                    }
+                }
+                String prompt = promptBuilder.toString();
+                String aiResponse = openAIClient.chatCompletion(prompt);
+                // Parse the AI response as JSON and write files
+                Files.createDirectories(outputDirectory);
+                Path aiOut = outputDirectory.resolve("openai_response.json");
+                Files.writeString(aiOut, aiResponse);
+                // Try to parse as JSON and write files
+                try {
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    Map<String, String> fileMap = mapper.readValue(aiResponse, Map.class);
+                    for (Map.Entry<String, String> fileEntry : fileMap.entrySet()) {
+                        Path filePath = outputDirectory.resolve(fileEntry.getKey());
+                        Files.createDirectories(filePath.getParent());
+                        Files.writeString(filePath, fileEntry.getValue());
+                    }
+                } catch (Exception jsonEx) {
+                    gapReportGenerator.addGap("Failed to parse OpenAI response as JSON: " + jsonEx.getMessage());
+                }
+            } catch (Exception e) {
+                gapReportGenerator.addGap("OpenAI API call failed: " + e.getMessage());
+            }
+            // Return minimal result for AI mode
+            return new GenerationResult(outputDirectory, Collections.emptyList(), gapReportGenerator.getGaps());
+        }
 
         boolean hasOpenAPI = uploadedFiles.containsKey("openapi") && uploadedFiles.get("openapi") != null;
         boolean hasGraphQL = uploadedFiles.containsKey("graphql") && uploadedFiles.get("graphql") != null;
@@ -211,7 +250,7 @@ public class SpecToCodeAgent {
                 Map<String, Path> files = new HashMap<>();
                 files.put("openapi", Path.of(incomingSpecPath));
                 Path outputDir = Path.of("generated-project");
-                GenerationResult result = agent.generateProject(files, outputDir);
+                GenerationResult result = agent.generateProject(files, outputDir, false);
                 System.out.println("Project generated successfully at: " + result.getOutputDirectory());
             } catch (Exception e) {
                 System.err.println("Error generating project: " + e.getMessage());
